@@ -4,8 +4,8 @@ download.file("https://ramadda.data.bas.ac.uk/repository/entry/show/Polar+Data+C
 temp2 = tempfile()
 download.file("https://ramadda.data.bas.ac.uk/repository/entry/show/Polar+Data+Centre/DOI/Antarctic+food+webs+-+Jacobian+matrices?entryid=1d1e4253-552a-421e-9bdc-20d70f683cc5&output=zip.zip",temp2)
 
-# temp3 = tempfile()
-# download.file("https://ramadda.data.bas.ac.uk/repository/entry/show/Polar+Data+Centre/DOI/Soil+food+webs%2C+agro+and+native+-+Jacobian+matrices?entryid=7b6dd454-d248-4264-b8a0-2de07a8dc882&output=zip.zip",temp3)
+temp3 = tempfile()
+download.file("https://ramadda.data.bas.ac.uk/repository/entry/show/Polar+Data+Centre/DOI/Soil+food+webs%2C+agro+and+native+-+Jacobian+matrices?entryid=7b6dd454-d248-4264-b8a0-2de07a8dc882&output=zip.zip",temp3)
 
 
 
@@ -135,21 +135,6 @@ plot(-selfreg[,1],selfreg[,19])
 
 library(beepr)
 
-random.move = function(diagonal.element, solution) {
-  #select a diagonal element to change
-  sel = sample(diagonal.element, 1)
-  #keep the *original maximum (min) self regulation
-  min = jacob[[30]][sel,sel]
-  #min = -6
-  #draw a random value from the [min,0] range
-  new = runif(1, min = min, max = 0)
-  #replace that element with the random value
-  solution[sel,sel] = new
-  new.solution = solution
-  return(new.solution)
-}
-
-
 compute.energy = function(jacobian){
   
   stab = max(Re(eigen(jacobian)$values))
@@ -172,7 +157,18 @@ simmulated_annealing = function(jacobian, t.init = 1, t.decrease = 0.999, t.fina
     t = t*t.decrease
     
     # 2) make a swap between two elements
-    new.sol = random.move(diagonal.element, solution)
+    
+    #select a diagonal element to change
+    sel = sample(diagonal.element, 1)
+    #keep the *original maximum (min) self regulation
+    min = jacobian[sel, sel]
+    #min = -6
+    #draw a random value from the [min,0] range
+    new = runif(1, min = min, max = 0)
+    #replace that element with the random value
+    solution[sel,sel] = new
+    new.sol = solution
+    #new.sol = random.move(diagonal.element, solution)
     new.energy = compute.energy(new.sol)
     
     # 3) accept or reject the move with metropolis hasting criteria
@@ -201,10 +197,11 @@ simmulated_annealing = function(jacobian, t.init = 1, t.decrease = 0.999, t.fina
     #diagonals = rbind(diagonals, diag(solution))
     #print(diagonals)
   }# end of the loop on t
-  
+  print(max(Re(eigen(jacobian)$values)))
+  print(max(Re(eigen(solution.best)$values)))
   return(solution.best)
 }
-stabler = simmulated_annealing(unstable.jacob[[30]]) ; beep(9)
+stabler = simmulated_annealing(jacob[[30]]) #; beep(9)
 
 
 stabler = simmulated_annealing(unstable.jacob[[30]]) ; beep(9)
