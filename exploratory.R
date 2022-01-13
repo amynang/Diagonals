@@ -241,18 +241,22 @@ compute.energy = function(jacobian){
 }
 
 
-N <- 1e8  # total number of rows to preallocate--possibly an overestimate
-
-thelot = data.frame(matrix(NA,    # Create empty data frame
-                           nrow = N,
-                           ncol = 8))
-colnames(thelot) = colnames(jacob[[30]])
-thelot$Stability = NA
+# N <- 1e6  # total number of rows to preallocate--possibly an overestimate
+# 
+# thelot = data.frame(matrix(NA,    # Create empty data frame
+#                            nrow = N,
+#                            ncol = 8))
+# colnames(thelot) = colnames(jacob[[30]])
+# thelot$Stability = NA
+# thelot[1, ] = c(diag(jacob[[30]]), max(Re(eigen(jacob[[30]])$values)))
+k = 1
+diagonals = t(data.frame(diag(jacob[[k]])))
+rownames(diagonals) = NULL
 
 simmulated_annealing = function(jacobian, t.init = 1, t.decrease = 0.999, t.final = .999^100000){
-  thelot[1, ] = c(diag(jacobian), max(Re(eigen(jacobian)$values)))
+  #thelot[1, ] = c(diag(jacobian), max(Re(eigen(jacobian)$values)))
   
-  counter = 2 
+  #counter = 2 
   
   diagonal.element = 1:length(diag(jacobian))
   #nb_l = 1:length(which(jacobian!=0))
@@ -304,14 +308,21 @@ simmulated_annealing = function(jacobian, t.init = 1, t.decrease = 0.999, t.fina
       }
     }# end of 3 
   
-    thelot[counter, ] = c(diag(solution.best), max(Re(eigen(solution.best)$values)))
-    counter = counter + 1
+    diagonals = rbind(diagonals, diag(solution.best))
+    
   }# end of the loop on t
   print(max(Re(eigen(jacobian)$values)))
   print(max(Re(eigen(solution.best)$values)))
-  return(thelot)
+  return(diagonals)
 }
-stabler = simmulated_annealing(jacob[[30]]) #; beep(9)
-jacob[[30]];stabler
+stabler = simmulated_annealing(jacob[[k]]) ; beep(9)
+#jacob[[30]];stabler
 
-stabler = simmulated_annealing(unstable.jacob[[30]]) ; beep(9)
+jacob.3 = jacob[[k]]
+Stability = vector(mode = "numeric", 100001)
+for (i in 1:100001) {
+  diag(jacob.3) = stabler[i,]
+  Stability[i] = max(Re(eigen(jacob.3)$values))
+}
+stablerr = cbind(stabler, Stability)
+plot(stablerr[,9])
